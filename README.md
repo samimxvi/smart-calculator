@@ -6,23 +6,16 @@
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-ff4b4b)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-A **AI calculator agent** built with [LangChain](https://www.langchain.com/), [Ollama](https://ollama.com/) and [Streamlit](https://streamlit.io/).
-
-You ask in plain English. A tool-calling LLM decides which tool to use, and **Python does the exact math**. The model never does arithmetic in its head, because LLMs are unreliable at that. Everything runs on your machine, with no API keys and no data leaving your computer.
-
-<!-- Add a screenshot: save it as docs/screenshot.png and uncomment the line below -->
-<!-- ![Screenshot](docs/screenshot.png) -->
-
 ## Features
 
-- 💬 **Natural-language math**: "What's 15% tip on $86.40 split 3 ways?"
-- 🔧 **Six tools**: expressions, unit conversion, statistics, compound interest, loan payments, quadratic equations
-- 🔒 **Safe evaluator**: expressions are parsed with a whitelisted AST. `eval()` is never used
-- 🧠 **Conversation memory**: follow-ups like "now divide that by 4" work
-- 🔍 **Transparent**: see every tool call, its arguments and its result
-- 🖥️ **Two interfaces**: Streamlit web UI and a terminal CLI
-- 🔌 **Model-agnostic**: any Ollama model that supports tool calling
-- ✅ **Tested**: unit tests for every tool, with no LLM required
+- **Natural-language math**: "What's 15% tip on $86.40 split 3 ways?"
+- **Six tools**: expressions, unit conversion, statistics, compound interest, loan payments, quadratic equations
+- **Safe evaluator**: expressions are parsed with a whitelisted AST. `eval()` is never used
+- **Conversation memory**: follow-ups like "now divide that by 4" work
+- **Transparent**: see every tool call, its arguments and its result
+- **Two interfaces**: Streamlit web UI and a terminal CLI
+- **Model-agnostic**: any Ollama model that supports tool calling
+- **Tested**: unit tests for every tool, with no LLM required
 
 ## How it works
 
@@ -158,66 +151,6 @@ The model **must support tool calling**.
 | `qwen2.5:14b` | More reliable on multi-step word problems, needs more RAM |
 | `llama3.2:3b` | Fast and light, but less reliable |
 
-## Project structure
-
-```
-smart-calculator-agent/
-├── pyproject.toml          # dependencies + calc-agent / calc-ui commands
-├── requirements.txt
-├── setup.ps1               # one-shot Windows setup
-├── .env.example
-├── .streamlit/config.toml  # disables Streamlit telemetry
-├── src/calc_agent/
-│   ├── cli.py              # terminal interface
-│   ├── app.py              # Streamlit UI
-│   ├── ui.py               # calc-ui launcher
-│   ├── agent.py            # ChatOllama + create_agent + memory
-│   ├── config.py           # settings from env / .env
-│   ├── prompts.py          # system prompt
-│   ├── ollama_check.py     # list models / pre-flight check
-│   └── tools/
-│       ├── __init__.py     # ALL_TOOLS registry
-│       ├── calculator.py   # safe AST expression evaluator
-│       ├── units.py
-│       ├── stats.py
-│       ├── finance.py
-│       └── algebra.py
-└── tests/
-```
-
-## Adding your own tool
-
-1. Create a file in `src/calc_agent/tools/`. Keep the logic in a plain function and make the tool a thin wrapper, which keeps it easy to test:
-
-```python
-   from langchain.tools import tool
-
-   def percent_change(old: float, new: float) -> float:
-       if old == 0:
-           raise ValueError("old value cannot be 0")
-       return (new - old) / old * 100
-
-   @tool
-   def percentage_change(old: float, new: float) -> str:
-       """Percentage change from an old value to a new value."""
-       try:
-           return f"{percent_change(old, new):.4g}%"
-       except ValueError as exc:
-           return f"Error: {exc}"
-```
-
-2. Register it in `src/calc_agent/tools/__init__.py` by adding it to `ALL_TOOLS`.
-
-The **docstring is what the model reads** to decide when to use the tool, so describe it and its arguments clearly.
-
-## Testing
-
-```bash
-pytest
-```
-
-The tests cover the tools only and need neither Ollama nor an internet connection.
-
 ## Troubleshooting
 
 | Problem | Fix |
@@ -230,9 +163,3 @@ The tests cover the tools only and need neither Ollama nor an internet connectio
 | `calc-agent` / `calc-ui` not found | Activate the virtual environment, or use `python -m calc_agent` / `streamlit run src/calc_agent/app.py` |
 | Port 8501 in use | `calc-ui --server.port 8502` |
 | Streamlit asks for an email | Press Enter to skip |
-
-## Limitations
-
-- Small local models can occasionally pick the wrong tool or mis-parse a word problem. Use the "Show tool calls" toggle to check.
-- There is no symbolic algebra (simplify, differentiate, integrate) yet. Only the quadratic solver is built in.
-- Conversation memory is in-process and is lost when you restart.
