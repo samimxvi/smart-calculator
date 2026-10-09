@@ -36,6 +36,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 prompt = st.chat_input("Try: Convert 5 miles to km, or calculate compound interest...")
+
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
